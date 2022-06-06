@@ -17,7 +17,7 @@ nest_asyncio.apply()
 client = discord.Client()
 parser = argparse.ArgumentParser(description="Process app arguments",
                                  formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--username", default="Vajicko", type=str,
+parser.add_argument("--username", default=variables.username, type=str,
                     help="Set the username for which the script will be reacting")
 args = parser.parse_args()
 config = vars(args)
@@ -253,7 +253,6 @@ async def game_runner():
         if run:
             await heal()
             await type_command("hunt")
-
             await type_command("cd")
 
             if time_now > next_work_timestamp:
@@ -307,20 +306,20 @@ async def on_message(message):
     embeds = message.embeds
 
     if "tdlf" in message_content:
-        if message_content == "tdlf start" and message.author.name == "Vajicko":
+        if message_content == "tdlf start" and message.author.name == variables.username:
             run = True
             embedVar = discord.Embed(title="Start bota za 5 sekund", description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
             await message.channel.send(embed=embedVar)
             time.sleep(5)
             await game_runner()
-        if message_content == "tdlf end" and message.author.name == "Vajicko":
+        if message_content == "tdlf end" and message.author.name == variables.username:
             run = False
             embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů", color=0x00ff00)
             await message.channel.send(embed=embedVar)
-        if message_content == "tdlf tr" and message.author.name == "Vajicko":
+        if message_content == "tdlf tr" and message.author.name == variables.username:
             await type_command("i")
             await type_command("tr")
-        if message_content == "tdlf ad" and message.author.name == "Vajicko":
+        if message_content == "tdlf ad" and message.author.name == variables.username:
             await type_command("heal")
             await type_command("adventure")
         if "help" in message_content:
