@@ -8,16 +8,11 @@ import re
 import emoji
 import nest_asyncio
 from datetime import datetime
-import epic_guard_solver as egs
 import variables
+from epic_guard_solver import solve_epic_guard
+
 
 nest_asyncio.apply()
-
-NUMBER_GUESS_TASK = 1
-NAME_GUESS_TASK = 2
-EMOJI_GUESS_TASK = 3
-LETTER_GUESS_TASK = 4
-INVENTORY_COUNT_GUESS_TASK = 5
 
 client = discord.Client()
 parser = argparse.ArgumentParser(description="Process app arguments",
@@ -32,10 +27,10 @@ keyboard = None
 is_solving_training = False
 
 global run
-run = "no"
+run = False
 
 global doheal
-doheal = "no"
+doheal = False
 
 random_work = ["drill"]
 next_adventure_timestamp = time.time()
@@ -44,42 +39,11 @@ next_lootbox_timestamp = time.time()
 next_farm_timestamp = time.time()
 next_work_timestamp = time.time()
 
-
-def split(words):
-    return [char for char in words]
-
-
-async def type_message(message):
-    for i in split(message):
-        if window is not None:
-            window.send_keystrokes(i)
-        elif keyboard is not None:
-            keyboard.type(i)
-
-
-async def press_enter():
-    if window is not None:
-        window.send_keystrokes("{ENTER}")
-    elif keyboard is not None:
-        keyboard.press(Key.enter)
-    await asyncio.sleep(1.5)
-
-
-async def type_command(command):
-    if check_ban_status():
-        die()
-
-    await type_message("rpg " + command)
-    await press_enter()
-
-
-async def heal():
-    if doheal == "yes":
-        await type_command("heal")
-
-
-def check_ban_status():
-    return is_banned
+NUMBER_GUESS_TASK = 1
+NAME_GUESS_TASK = 2
+EMOJI_GUESS_TASK = 3
+LETTER_GUESS_TASK = 4
+INVENTORY_COUNT_GUESS_TASK = 5
 
 
 def base_emoji_to_epic_rpg_name(basic_emoji_name):
@@ -121,6 +85,21 @@ def which_fish(fish):
     return transcribes.get(fish)
 
 
+def get_training_task(training_task_text):
+    training_task_text = training_task_text.lower()
+
+    if "how many" in training_task_text:
+        return NUMBER_GUESS_TASK
+    elif "what is the name" in training_task_text:
+        return NAME_GUESS_TASK
+    elif "is this a" in training_task_text:
+        return EMOJI_GUESS_TASK
+    elif "answer with a letter" in training_task_text:
+        return LETTER_GUESS_TASK
+    elif "do you have more" in training_task_text:
+        return INVENTORY_COUNT_GUESS_TASK
+
+
 async def solve_training(training_task_text):
     global is_solving_training
 
@@ -159,25 +138,46 @@ async def solve_training(training_task_text):
         if current_count > expected_count:
             answer = "yes"
 
-    time.sleep(3)
     await type_message(answer)
     await press_enter()
     is_solving_training = False
 
 
-def get_training_task(training_task_text):
-    training_task_text = training_task_text.lower()
+def split(words):
+    return [char for char in words]
 
-    if "how many" in training_task_text:
-        return NUMBER_GUESS_TASK
-    elif "what is the name" in training_task_text:
-        return NAME_GUESS_TASK
-    elif "is this a" in training_task_text:
-        return EMOJI_GUESS_TASK
-    elif "answer with a letter" in training_task_text:
-        return LETTER_GUESS_TASK
-    elif "do you have more" in training_task_text:
-        return INVENTORY_COUNT_GUESS_TASK
+
+async def type_message(message):
+    for i in split(message):
+        if window is not None:
+            window.send_keystrokes(i)
+        elif keyboard is not None:
+            keyboard.type(i)
+
+
+async def press_enter():
+    if window is not None:
+        window.send_keystrokes("{ENTER}")
+    elif keyboard is not None:
+        keyboard.press(Key.enter)
+    await asyncio.sleep(1.5)
+
+
+async def type_command(command):
+    if check_ban_status():
+        die()
+
+    await type_message("rpg " + command)
+    await press_enter()
+
+
+async def heal():
+    if doheal:
+        await type_command("heal")
+
+
+def check_ban_status():
+    return is_banned
 
 
 def is_training_task(message):
@@ -250,7 +250,7 @@ async def game_runner():
             continue
 
         time_now = time.time()
-        if run == "yes":
+        if run:
             await heal()
             await type_command("hunt")
 
@@ -308,12 +308,15 @@ async def on_message(message):
 
     if "tdlf" in message_content:
         if message_content == "tdlf start" and message.author.name == "Vajicko":
-            run = "yes"
+            run = True
+            embedVar = discord.Embed(title="Start bota za 5 sekund", description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
+            await message.channel.send(embed=embedVar)
+            time.sleep(5)
             await game_runner()
-            await message.channel.send(file=discord.File('start.gif'))
         if message_content == "tdlf end" and message.author.name == "Vajicko":
-            run = "no"
-            await message.channel.send(file=discord.File('end.gif'))
+            run = False
+            embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů", color=0x00ff00)
+            await message.channel.send(embed=embedVar)
         if message_content == "tdlf tr" and message.author.name == "Vajicko":
             await type_command("i")
             await type_command("tr")
@@ -424,7 +427,7 @@ async def on_message(message):
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
         await channel.send(current_time)
-        await type_message(egs.solve_epic_guard(message))
+        await type_message(solve_epic_guard(message))
         await press_enter()
 
     if is_jail_message(message_content.lower()):
