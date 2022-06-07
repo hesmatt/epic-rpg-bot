@@ -9,8 +9,9 @@ import emoji
 import nest_asyncio
 from datetime import datetime
 import variables
-from epic_guard_solver import solve_epic_guard
-
+import epic_guard_solver
+import training_solver
+import guess_task_constants
 
 nest_asyncio.apply()
 
@@ -39,98 +40,38 @@ next_lootbox_timestamp = time.time()
 next_farm_timestamp = time.time()
 next_work_timestamp = time.time()
 
-NUMBER_GUESS_TASK = 1
-NAME_GUESS_TASK = 2
-EMOJI_GUESS_TASK = 3
-LETTER_GUESS_TASK = 4
-INVENTORY_COUNT_GUESS_TASK = 5
-
-
-def base_emoji_to_epic_rpg_name(basic_emoji_name):
-    basic_emoji_name = basic_emoji_name.lower()
-    basic_emoji_transcribes = {
-        "gem stone": "diamond",
-        "gift": "gift",
-        "four leaf clover": "four leaf clover"
-    }
-
-    return basic_emoji_transcribes.get(basic_emoji_name)
-
-
-def letter_of_position(word, position):
-    word = word + word
-    transcribes = {
-        "first": word[0],
-        "second": word[1],
-        "third": word[2],
-        "fourth": word[3],
-        "fifth": word[4],
-        "sixth": word[5],
-        "seventh": word[6],
-        "eight": word[7],
-        "ninth": word[8],
-        "tenth": word[9]
-    }
-
-    return transcribes.get(position)
-
-
-def which_fish(fish):
-    transcribes = {
-        "normiefish": 1,
-        "goldenfish": 2,
-        "epicfish": 3
-    }
-
-    return transcribes.get(fish)
-
-
-def get_training_task(training_task_text):
-    training_task_text = training_task_text.lower()
-
-    if "how many" in training_task_text:
-        return NUMBER_GUESS_TASK
-    elif "what is the name" in training_task_text:
-        return NAME_GUESS_TASK
-    elif "is this a" in training_task_text:
-        return EMOJI_GUESS_TASK
-    elif "answer with a letter" in training_task_text:
-        return LETTER_GUESS_TASK
-    elif "do you have more" in training_task_text:
-        return INVENTORY_COUNT_GUESS_TASK
-
 
 async def solve_training(training_task_text):
     global is_solving_training
 
-    task_type = get_training_task(training_task_text)
+    task_type = training_solver.get_training_task(training_task_text)
     task_text_lines = training_task_text.splitlines()
     answer = "No idea"
 
-    if task_type is NUMBER_GUESS_TASK:
+    if task_type is guess_task_constants.NUMBER_GUESS_TASK:
         emoji_to_search = task_text_lines[2].split(":", 1)[1].split(":", 1)[0].replace(":", "").strip().lower().replace(
             "_", " ")
         total_emoji_count = task_text_lines[1].lower().count(emoji_to_search)
         answer = str(total_emoji_count)
 
-    elif task_type is NAME_GUESS_TASK:
+    elif task_type is guess_task_constants.NAME_GUESS_TASK:
         fish = task_text_lines[1].lower().split(":", 1)[1].split(":", 1)[0]
-        answer = str(which_fish(fish))
+        answer = str(training_solver.which_fish(fish))
 
-    elif task_type is EMOJI_GUESS_TASK:
+    elif task_type is guess_task_constants.EMOJI_GUESS_TASK:
         answer = "no"
-        real_emoji_name = base_emoji_to_epic_rpg_name(
+        real_emoji_name = training_solver.base_emoji_to_epic_rpg_name(
             task_text_lines[1].split("?", 1)[1].strip().replace(":", "").replace("_", " "))
         given_emoji_name = task_text_lines[1].split("a", 1)[1].split("?")[0].strip().lower().replace("_", " ")
         if given_emoji_name == real_emoji_name:
             answer = "yes"
 
-    elif task_type is LETTER_GUESS_TASK:
+    elif task_type is guess_task_constants.LETTER_GUESS_TASK:
         word = task_text_lines[1].split(":", 1)[1].split(":", 1)[0].lower()
         position = task_text_lines[1].split("the", 1)[1].split("letter", 1)[0].strip().lower().replace("*", "")
-        answer = str(letter_of_position(word, position))
+        answer = str(training_solver.letter_of_position(word, position))
 
-    elif task_type is INVENTORY_COUNT_GUESS_TASK:
+    elif task_type is guess_task_constants.INVENTORY_COUNT_GUESS_TASK:
         answer = "no"
         expected_count = int(
             task_text_lines[1].split("than", 1)[1].split(":", 1)[0].replace("<", "").replace(" ", "").strip())
@@ -288,6 +229,7 @@ async def on_ready():
     global window
     global keyboard
     keyboard = Controller()
+    await game_runner()
 
 
 @client.event
@@ -304,22 +246,21 @@ async def on_message(message):
     global run
     message_content = emoji.demojize(message.content)
     embeds = message.embeds
-
     if "tdlf" in message_content:
-        if message_content == "tdlf start" and message.author.name == variables.username:
+        if message_content == "tdlf start" and message.author.id == variables.user_id:
             run = True
-            embedVar = discord.Embed(title="Start bota za 5 sekund", description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
+            embedVar = discord.Embed(title="Start bota proběhne do minuty", description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
             await message.channel.send(embed=embedVar)
             time.sleep(5)
-            await game_runner()
-        if message_content == "tdlf end" and message.author.name == variables.username:
+        if message_content == "tdlf end" and message.author.id == variables.user_id:
             run = False
             embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů", color=0x00ff00)
             await message.channel.send(embed=embedVar)
-        if message_content == "tdlf tr" and message.author.name == variables.username:
+        if message_content == "tdlf tr" and message.author.id == variables.user_id:
             await type_command("i")
             await type_command("tr")
-        if message_content == "tdlf ad" and message.author.name == variables.username:
+
+        if message_content == "tdlf ad" and message.author.id == variables.user_id:
             await type_command("heal")
             await type_command("adventure")
         if "help" in message_content:
@@ -342,7 +283,7 @@ async def on_message(message):
                 value="Automaticky spustí commandy pro craft ULTRA logu, use je optional a definují se tam itemy, které se můžou vytradit nebo dismantlnout. Pokud se use nepoužije, je to jako by byly vypsané všechny itemy, takže se vytradí a dismantlí.",
                 inline=False)
             await message.channel.send(embed=embedVar)
-        if "craft" in message_content:
+        if "craft" in message_content and message.author.id == variables.user_id:
             craft_item = message_content.split("craft ", 1)[1].split(" use")[0]
             use = message_content.split("craft ", 1)[1].split("use ")[1]
             if craft_item == "ultra log":
@@ -425,8 +366,8 @@ async def on_message(message):
         channel = client.get_channel(979667826694582303)
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        await channel.send(current_time)
-        await type_message(solve_epic_guard(message))
+        await channel.send(variables.username + " triggered epic guard at " + current_time)
+        await type_message(epic_guard_solver.solve_epic_guard(message))
         await press_enter()
 
     if is_jail_message(message_content.lower()):
