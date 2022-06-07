@@ -9,9 +9,8 @@ import emoji
 import nest_asyncio
 from datetime import datetime
 import variables
-import epic_guard_solver
-import training_solver
-import guess_task_constants
+from modules import training_solver, typer, epic_guard_solver
+from constants import guess_task_constants
 
 nest_asyncio.apply()
 
@@ -23,7 +22,6 @@ parser.add_argument("--username", default=variables.username, type=str,
 args = parser.parse_args()
 config = vars(args)
 is_banned = False
-window = None
 keyboard = None
 is_solving_training = False
 
@@ -37,6 +35,7 @@ random_work = ["drill"]
 next_adventure_timestamp = time.time()
 next_training_timestamp = time.time()
 next_lootbox_timestamp = time.time()
+next_epic_quest_timestamp = time.time()
 next_farm_timestamp = time.time()
 next_work_timestamp = time.time()
 
@@ -84,22 +83,14 @@ async def solve_training(training_task_text):
     is_solving_training = False
 
 
-def split(words):
-    return [char for char in words]
-
-
 async def type_message(message):
-    for i in split(message):
-        if window is not None:
-            window.send_keystrokes(i)
-        elif keyboard is not None:
+    for i in typer.split(message):
+        if keyboard is not None:
             keyboard.type(i)
 
 
 async def press_enter():
-    if window is not None:
-        window.send_keystrokes("{ENTER}")
-    elif keyboard is not None:
+    if keyboard is not None:
         keyboard.press(Key.enter)
     await asyncio.sleep(1.5)
 
@@ -107,7 +98,6 @@ async def press_enter():
 async def type_command(command):
     if check_ban_status():
         die()
-
     await type_message("rpg " + command)
     await press_enter()
 
@@ -182,6 +172,7 @@ async def game_runner():
         global next_farm_timestamp
         global next_training_timestamp
         global next_lootbox_timestamp
+        global next_epic_quest_timestamp
         global is_solving_training
 
         if check_ban_status():
@@ -205,6 +196,13 @@ async def game_runner():
                 await type_command("buy edgy lootbox")
                 next_lootbox_timestamp = time.time() + 10800
 
+            if time_now > next_epic_quest_timestamp:
+                await type_command("heal")
+                await type_command("epic quest")
+                await type_message("15")
+                await press_enter()
+                next_epic_quest_timestamp = time.time() + 21600
+
             if time_now > next_adventure_timestamp:
                 await heal()
                 await type_command("adventure")
@@ -226,7 +224,6 @@ async def game_runner():
 
 @client.event
 async def on_ready():
-    global window
     global keyboard
     keyboard = Controller()
     await game_runner()
@@ -239,6 +236,7 @@ async def on_message(message):
     global next_farm_timestamp
     global next_training_timestamp
     global next_lootbox_timestamp
+    global next_epic_quest_timestamp
     global is_banned
     global is_solving_training
     global items
@@ -249,34 +247,71 @@ async def on_message(message):
     if "tdlf" in message_content:
         if message_content == "tdlf start" and message.author.id == variables.user_id:
             run = True
-            embedVar = discord.Embed(title="Start bota proběhne do minuty", description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
+            embedVar = discord.Embed(title="Start bota proběhne do minuty",
+                                     description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
             await message.channel.send(embed=embedVar)
-            time.sleep(5)
+
+        if message_content == "tdlf cons" and message.author.id == variables.user_id:
+            await type_command("i")
+            embedVar = discord.Embed(title="Consumables", description=consumables, color=0x00ff00)
+            await message.channel.send(embed=embedVar)
+
+        if message_content == "tdlf i" and message.author.id == variables.user_id:
+            await type_command("i")
+            embedVar = discord.Embed(title="Items", description=items, color=0x00ff00)
+            await message.channel.send(embed=embedVar)
+
+        if message_content == "tdlf open lb" and message.author.id == variables.user_id:
+            await type_command("open edgy lootbox all")
+            await type_command("open epic lootbox all")
+            await type_command("open rare lootbox all")
+            await type_command("open uncommon lootbox all")
+            await type_command("open common lootbox all")
+
         if message_content == "tdlf end" and message.author.id == variables.user_id:
             run = False
-            embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů", color=0x00ff00)
+            embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů",
+                                     color=0x00ff00)
             await message.channel.send(embed=embedVar)
+
         if message_content == "tdlf tr" and message.author.id == variables.user_id:
             await type_command("i")
             await type_command("tr")
 
+        if message_content == "tdlf farm" and message.author.id == variables.user_id:
+            await type_command("i")
+            await type_command("farm " + farm_by_seed())
+
         if message_content == "tdlf ad" and message.author.id == variables.user_id:
             await type_command("heal")
             await type_command("adventure")
+
         if "help" in message_content:
             embedVar = discord.Embed(title="Možné tdlf helper commandy", description="", color=0x00ff00)
             embedVar.add_field(
                 name="```tdlf start```",
                 value="Pustí tu kurvu bota", inline=False)
             embedVar.add_field(
-                name="```tdlf start```",
+                name="```tdlf end```",
                 value="Vypne tu kurvu bota", inline=False)
             embedVar.add_field(
                 name="```tdlf tr```",
                 value="Pustí automatický training", inline=False)
             embedVar.add_field(
+                name="```tdlf farm```",
+                value="Zandá rpg farm podle seedu co máš v inventáři", inline=False)
+            embedVar.add_field(
                 name="```tdlf ad```",
                 value="Pustí adventure s healem", inline=False)
+            embedVar.add_field(
+                name="```tdlf open lb```",
+                value="Otevře všechny lootboxy", inline=False)
+            embedVar.add_field(
+                name="```tdlf cons```",
+                value="Json consumables", inline=False)
+            embedVar.add_field(
+                name="```tdlf i```",
+                value="Json items", inline=False)
             embedVar.add_field(
                 name="```tdlf craft ultra log use apple ruby banana epicfish goldenfish```\n"
                      "```tdlf craft ultra log```",
@@ -371,7 +406,7 @@ async def on_message(message):
         await press_enter()
 
     if is_jail_message(message_content.lower()):
-        is_banned = True
+        run = False
 
     if is_training_task(message_content.lower()):
         is_solving_training = True

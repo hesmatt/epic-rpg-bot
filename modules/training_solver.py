@@ -1,4 +1,4 @@
-import guess_task_constants
+from constants import guess_task_constants
 
 
 def which_fish(fish):

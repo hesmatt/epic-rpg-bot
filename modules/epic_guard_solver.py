@@ -25,7 +25,8 @@ def solve_epic_guard(message):
     golden_fish = [255, 204, 0, 129, 104, 0, 0, 0, 0, "golden fish"]
     unicorn_horn = [118, 23, 54, 241, 82, 134, 237, 116, 155, "unicorn horn"]
     ruby = [230, 0, 0, 164, 0, 0, 196, 0, 0, "ruby"]
-    tries = [apple, life_potion, normie_fish, coin, zombie_eye, banana, golden_fish, unicorn_horn, ruby]
+    epic_coin = [184, 95, 184, 152, 77, 202, 106, 65, 214, "epic coin"]
+    tries = [apple, life_potion, normie_fish, coin, zombie_eye, banana, golden_fish, unicorn_horn, ruby, epic_coin]
     global epic_guard_answer
     epic_guard_answer = "Tvoje mamka"
     img_data = requests.get(message.attachments[0]).content
