@@ -1,4 +1,5 @@
 import time
+import shutil
 
 import requests
 from PIL import Image
@@ -39,4 +40,6 @@ def solve_epic_guard(message):
         color_three = detect_color((item[6], item[7], item[8]), "epic_guard_images/" + name)
         if color_one is True and color_two is True and color_three is True:
             epic_guard_answer = item[9]
+    if epic_guard_answer == "Tvoje mamka":
+        shutil.copy("epic_guard_images/" + name, "unpassed_epic_guard_images/" + name)
     return epic_guard_answer
