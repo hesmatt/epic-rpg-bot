@@ -19,7 +19,7 @@ async def type_message(message):
 async def press_enter():
     if globals_.keyboard is not None:
         globals_.keyboard.press(Key.enter)
-    await asyncio.sleep(1.5)
+    await asyncio.sleep(1.9)
 
 
 async def type_command(command):

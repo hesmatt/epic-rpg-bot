@@ -31,7 +31,7 @@ def is_training_task(message):
 
 
 def is_epic_guard_message(message):
-    if "epic guard" in message and "485032715008212992" in message.lower():
+    if "epic guard" in message and variables.user_id in message.lower():
         return True
 
     return False
@@ -134,6 +134,7 @@ async def on_message(message):
             await typer.type_command("open rare lootbox all")
             await typer.type_command("open uncommon lootbox all")
             await typer.type_command("open common lootbox all")
+            await message.channel.send("Všecko jsem otevřel")
 
         if message_content == "tdlf end" and message.author.id == variables.user_id:
             globals_.run = False

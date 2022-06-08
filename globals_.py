@@ -1,19 +1,12 @@
 import time
 
-global keyboard
-keyboard = None
-global is_banned
-is_banned = False
-global is_solving_training
-is_solving_training = False
-global items
-items = {}
-global consumables
-consumables = {}
-global run
-run = False
 global doheal
-doheal = False
+global run
+global keyboard
+global items
+global consumables
+global is_banned
+global is_solving_training
 global next_work_timestamp
 global next_adventure_timestamp
 global next_farm_timestamp
@@ -27,3 +20,10 @@ next_epic_quest_timestamp = time.time()
 next_farm_timestamp = time.time()
 next_work_timestamp = time.time()
 next_adventure_timestamp = time.time()
+keyboard = None
+is_banned = False
+is_solving_training = False
+items = {}
+consumables = {}
+run = False  # set to True to run automatic tdlf bot on start
+doheal = False  # set to True to use healing during automatic run
