@@ -1,4 +1,6 @@
 from constants import guess_task_constants
+from modules import typer, inventory
+import globals_
 
 
 def which_fish(fish):
@@ -53,3 +55,45 @@ def letter_of_position(word, position):
     }
 
     return transcribes.get(position)
+
+
+async def solve_training(training_task_text):
+
+    task_type = get_training_task(training_task_text)
+    task_text_lines = training_task_text.splitlines()
+    answer = "No idea"
+
+    if task_type is guess_task_constants.NUMBER_GUESS_TASK:
+        emoji_to_search = task_text_lines[2].split(":", 1)[1].split(":", 1)[0].replace(":", "").strip().lower().replace(
+            "_", " ")
+        total_emoji_count = task_text_lines[1].lower().count(emoji_to_search)
+        answer = str(total_emoji_count)
+
+    elif task_type is guess_task_constants.NAME_GUESS_TASK:
+        fish = task_text_lines[1].lower().split(":", 1)[1].split(":", 1)[0]
+        answer = str(which_fish(fish))
+
+    elif task_type is guess_task_constants.EMOJI_GUESS_TASK:
+        answer = "no"
+        real_emoji_name = base_emoji_to_epic_rpg_name(
+            task_text_lines[1].split("?", 1)[1].strip().replace(":", "").replace("_", " "))
+        given_emoji_name = task_text_lines[1].split("a", 1)[1].split("?")[0].strip().lower().replace("_", " ")
+        if given_emoji_name == real_emoji_name:
+            answer = "yes"
+
+    elif task_type is guess_task_constants.LETTER_GUESS_TASK:
+        word = task_text_lines[1].split(":", 1)[1].split(":", 1)[0].lower()
+        position = task_text_lines[1].split("the", 1)[1].split("letter", 1)[0].strip().lower().replace("*", "")
+        answer = str(letter_of_position(word, position))
+
+    elif task_type is guess_task_constants.INVENTORY_COUNT_GUESS_TASK:
+        answer = "no"
+        expected_count = int(
+            task_text_lines[1].split("than", 1)[1].split(":", 1)[0].replace("<", "").replace(" ", "").strip())
+        current_count = inventory.get_count_of_item_in_inventory("ruby")
+        if current_count > expected_count:
+            answer = "yes"
+
+    await typer.type_message(answer)
+    await typer.press_enter()
+    globals_.is_solving_training = False
