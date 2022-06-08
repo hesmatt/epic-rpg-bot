@@ -31,7 +31,7 @@ def is_training_task(message):
 
 
 def is_epic_guard_message(message):
-    if "epic guard" in message and variables.user_id in message.lower():
+    if "epic guard" in message and str(variables.user_id) in message.lower():
         return True
 
     return False
@@ -222,47 +222,47 @@ async def on_message(message):
                     await typer.type_command("craft ultra log all")
 
     for embed in embeds:
-        print(embed.to_dict())
-        if variables.username + "'s inventory" == embed.to_dict()["author"]["name"]:
-            embed_text = embed.to_dict()
-            for split_item in re.sub('<[^>]+>', '', embed_text["fields"][0]["value"].replace("**", "")).splitlines():
-                item = split_item.split(":", 1)[0].strip().replace(" ", "").lower()
-                count = split_item.split(":", 1)[1].strip().replace(",", "")
-                globals_.items[item] = count
+        if "author" in embed.to_dict():
+            if variables.username + "'s inventory" == embed.to_dict()["author"]["name"]:
+                embed_text = embed.to_dict()
+                for split_item in re.sub('<[^>]+>', '', embed_text["fields"][0]["value"].replace("**", "")).splitlines():
+                    item = split_item.split(":", 1)[0].strip().replace(" ", "").lower()
+                    count = split_item.split(":", 1)[1].strip().replace(",", "")
+                    globals_.items[item] = count
 
-            for split_consumable in re.sub('<[^>]+>', '',
-                                           embed_text["fields"][1]["value"].replace("**", "")).splitlines():
-                consumable = split_consumable.split(":", 1)[0].strip().replace(" ", "").lower()
-                count = split_consumable.split(":", 1)[1].strip().replace(",", "")
-                globals_.consumables[consumable] = count
+                for split_consumable in re.sub('<[^>]+>', '',
+                                               embed_text["fields"][1]["value"].replace("**", "")).splitlines():
+                    consumable = split_consumable.split(":", 1)[0].strip().replace(" ", "").lower()
+                    count = split_consumable.split(":", 1)[1].strip().replace(",", "")
+                    globals_.consumables[consumable] = count
 
-        if variables.username + "'s cooldowns" == embed.to_dict()["author"]["name"]:
-            embed_text = embed.to_dict()
-            for ema in embed_text["fields"][0]["value"].splitlines():
-                if "(" in ema and "Lootbox" in ema:
-                    hours_seconds = (int(ema.split("(**", 1)[1].split("h", 1)[0])) * 60 * 60
-                    seconds = (int(ema.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].split("h", 1)[1].replace(" ",
-                                                                                                                    "")) + 1) * 60
-                    total_seconds = hours_seconds + seconds
-                    globals_.next_lootbox_timestamp = time.time() + total_seconds
+            if variables.username + "'s cooldowns" == embed.to_dict()["author"]["name"]:
+                embed_text = embed.to_dict()
+                for ema in embed_text["fields"][0]["value"].splitlines():
+                    if "(" in ema and "Lootbox" in ema:
+                        hours_seconds = (int(ema.split("(**", 1)[1].split("h", 1)[0])) * 60 * 60
+                        seconds = (int(ema.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].split("h", 1)[1].replace(" ",
+                                                                                                                        "")) + 1) * 60
+                        total_seconds = hours_seconds + seconds
+                        globals_.next_lootbox_timestamp = time.time() + total_seconds
 
-            for em in embed_text["fields"][1]["value"].splitlines():
-                if "(" in em and ("Training" in em or "Adventure" in em):
-                    seconds = (int(em.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
-                                                                                                                   "")) + 1) * 60
-                    if "Training" in em:
-                        globals_.next_training_timestamp = time.time() + seconds
-                    if "Adventure" in em:
-                        globals_.next_adventure_timestamp = time.time() + seconds
+                for em in embed_text["fields"][1]["value"].splitlines():
+                    if "(" in em and ("Training" in em or "Adventure" in em):
+                        seconds = (int(em.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
+                                                                                                                       "")) + 1) * 60
+                        if "Training" in em:
+                            globals_.next_training_timestamp = time.time() + seconds
+                        if "Adventure" in em:
+                            globals_.next_adventure_timestamp = time.time() + seconds
 
-            for ems in embed_text["fields"][2]["value"].splitlines():
-                if "(" in ems and ("Chop" in ems or "Farm" in ems):
-                    seconds = (int(ems.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
-                                                                                                                    "")) + 1) * 60
-                    if "Chop" in ems:
-                        globals_.next_work_timestamp = time.time() + seconds
-                    if "Farm" in ems:
-                        globals_.next_farm_timestamp = time.time() + seconds
+                for ems in embed_text["fields"][2]["value"].splitlines():
+                    if "(" in ems and ("Chop" in ems or "Farm" in ems):
+                        seconds = (int(ems.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
+                                                                                                                        "")) + 1) * 60
+                        if "Chop" in ems:
+                            globals_.next_work_timestamp = time.time() + seconds
+                        if "Farm" in ems:
+                            globals_.next_farm_timestamp = time.time() + seconds
 
     if is_epic_guard_message(message_content.lower()):
         channel = client.get_channel(979667826694582303)
@@ -275,6 +275,8 @@ async def on_message(message):
     if is_jail_message(message_content.lower()):
         globals_.run = False
         globals_.is_banned = True
+        embedVar = discord.Embed(title="EPIC GUARD", description="Vypínám se kvůli epic guardu a jailu", color=0x00ff00)
+        await message.channel.send(embed=embedVar)
 
     if is_training_task(message_content.lower()):
         globals_.is_solving_training = True
