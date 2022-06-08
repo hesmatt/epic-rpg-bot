@@ -1,6 +1,7 @@
 import time
+import pywinauto
 
-global doheal
+global do_heal
 global run
 global keyboard
 global items
@@ -25,5 +26,7 @@ is_banned = False
 is_solving_training = False
 items = {}
 consumables = {}
-run = False  # set to True to run automatic tdlf bot on start
-doheal = False  # set to True to use healing during automatic run
+run = True  # set to True to run automatic tdlf bot on start
+do_heal = False  # set to True to use healing during automatic run
+window = pywinauto.Application().connect(title="🦊matoo-rpg - Discord", timeout=5000).window(
+    title="🦊matoo-rpg - Discord")

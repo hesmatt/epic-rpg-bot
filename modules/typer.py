@@ -12,13 +12,13 @@ def split(words):
 
 async def type_message(message):
     for i in split(message):
-        if globals_.keyboard is not None:
-            globals_.keyboard.type(i)
+        if globals_.window is not None:
+            globals_.window.send_keystrokes(i)
 
 
 async def press_enter():
-    if globals_.keyboard is not None:
-        globals_.keyboard.press(Key.enter)
+    if globals_.window is not None:
+        globals_.window.send_keystrokes("{ENTER}")
     await asyncio.sleep(1.9)
 
 

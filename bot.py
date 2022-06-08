@@ -19,7 +19,7 @@ random_work = ["drill"]
 
 
 async def heal():
-    if globals_.doheal:
+    if globals_.do_heal:
         await typer.type_command("heal")
 
 
@@ -46,12 +46,12 @@ def is_jail_message(message):
 
 
 def farm_by_seed():
-    if inventory.get_count_of_consumables_in_inventory("carrotseed") > 0:
-        return "carrot"
-    if inventory.get_count_of_consumables_in_inventory("breadseed") > 0:
-        return "bread"
-    if inventory.get_count_of_consumables_in_inventory("potatoseed") > 0:
-        return "potato"
+    # if inventory.get_count_of_consumables_in_inventory("carrotseed") > 0:
+    #     return "carrot"
+    # if inventory.get_count_of_consumables_in_inventory("breadseed") > 0:
+    #     return "bread"
+    # if inventory.get_count_of_consumables_in_inventory("potatoseed") > 0:
+    #     return "potato"
     return "basic"
 
 
@@ -75,12 +75,12 @@ async def game_runner():
                 await typer.type_command("buy edgy lootbox")
                 globals_.next_lootbox_timestamp = time.time() + 10800
 
-            if time_now > globals_.next_epic_quest_timestamp:
-                await typer.type_command("heal")
-                await typer.type_command("epic quest")
-                await typer.type_message("15")
-                await typer.press_enter()
-                globals_.next_epic_quest_timestamp = time.time() + 21600
+            # if time_now > globals_.next_epic_quest_timestamp:
+            #     await typer.type_command("heal")
+            #     await typer.type_command("epic quest")
+            #     await typer.type_message("15")
+            #     await typer.press_enter()
+            #     globals_.next_epic_quest_timestamp = time.time() + 21600
 
             if time_now > globals_.next_adventure_timestamp:
                 await heal()
