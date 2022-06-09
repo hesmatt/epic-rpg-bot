@@ -1,5 +1,6 @@
 import time
 import shutil
+import globals_
 
 import requests
 from PIL import Image
@@ -25,11 +26,13 @@ def solve_epic_guard(message):
     banana = [253, 215, 0, 225, 191, 0, 209, 135, 22, "banana"]
     golden_fish = [255, 204, 0, 129, 104, 0, 0, 0, 0, "golden fish"]
     unicorn_horn = [118, 23, 54, 241, 82, 134, 237, 116, 155, "unicorn horn"]
+    unicorn_horn_2 = [99, 11, 40, 255, 141, 178, 255, 90, 143, "unicorn horn"]
     ruby = [230, 0, 0, 164, 0, 0, 196, 0, 0, "ruby"]
     epic_coin = [184, 95, 184, 152, 77, 202, 106, 65, 214, "epic coin"]
-    tries = [apple, life_potion, normie_fish, coin, zombie_eye, banana, golden_fish, unicorn_horn, ruby, epic_coin]
-    global epic_guard_answer
-    epic_guard_answer = "Tvoje mamka"
+    chip = [0, 28, 7, 240, 233, 142, 34, 177, 76, "chip"]
+    tries = [apple, life_potion, normie_fish, coin, zombie_eye, banana, golden_fish, unicorn_horn,unicorn_horn_2, ruby,
+             epic_coin, chip]
+    answer = globals_.epic_guard_answer
     img_data = requests.get(message.attachments[0]).content
     name = str(time.time()).split(".", 1)[0] + ".png"
     with open("epic_guard_images/" + name, 'wb') as handler:
@@ -39,7 +42,7 @@ def solve_epic_guard(message):
         color_two = detect_color((item[3], item[4], item[5]), "epic_guard_images/" + name)
         color_three = detect_color((item[6], item[7], item[8]), "epic_guard_images/" + name)
         if color_one is True and color_two is True and color_three is True:
-            epic_guard_answer = item[9]
-    if epic_guard_answer == "Tvoje mamka":
+            answer = item[9]
+    if answer == globals_.epic_guard_answer:
         shutil.copy("epic_guard_images/" + name, "unpassed_epic_guard_images/" + name)
-    return epic_guard_answer
+    return answer
