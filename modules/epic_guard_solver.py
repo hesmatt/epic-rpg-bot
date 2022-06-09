@@ -21,6 +21,7 @@ def solve_epic_guard(message):
     apple = [237, 28, 36, 38, 198, 86, 201, 120, 31, "apple"]
     life_potion = [217, 17, 27, 198, 252, 255, 109, 64, 1, "life potion"]
     normie_fish = [0, 198, 255, 0, 0, 0, 0, 96, 124, "normie fish"]
+    normie_fish_2 = [0, 202, 255, 0, 0, 0, 0, 110, 143, "normie fish"]
     coin = [255, 242, 0, 221, 210, 0, 149, 141, 0, "coin"]
     zombie_eye = [194, 235, 71, 77, 98, 11, 40, 40, 40, "zombie eye"]
     banana = [253, 215, 0, 225, 191, 0, 209, 135, 22, "banana"]
@@ -30,8 +31,23 @@ def solve_epic_guard(message):
     ruby = [230, 0, 0, 164, 0, 0, 196, 0, 0, "ruby"]
     epic_coin = [184, 95, 184, 152, 77, 202, 106, 65, 214, "epic coin"]
     chip = [0, 28, 7, 240, 233, 142, 34, 177, 76, "chip"]
-    tries = [apple, life_potion, normie_fish, coin, zombie_eye, banana, golden_fish, unicorn_horn,unicorn_horn_2, ruby,
-             epic_coin, chip]
+    epic_fish = [37, 197, 85, 8, 44, 18, 36, 36, 36, "epic fish"]
+    tries = [
+        apple,
+        life_potion,
+        normie_fish,
+        normie_fish_2,
+        coin,
+        zombie_eye,
+        banana,
+        golden_fish,
+        unicorn_horn,
+        unicorn_horn_2,
+        ruby,
+        epic_coin,
+        chip,
+        epic_fish
+    ]
     answer = globals_.epic_guard_answer
     img_data = requests.get(message.attachments[0]).content
     name = str(time.time()).split(".", 1)[0] + ".png"
