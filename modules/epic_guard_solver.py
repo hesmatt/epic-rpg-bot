@@ -33,6 +33,7 @@ def solve_epic_guard(message):
     chip = [0, 28, 7, 240, 233, 142, 34, 177, 76, "chip"]
     epic_fish = [37, 197, 85, 8, 44, 18, 36, 36, 36, "epic fish"]
     mermaid_hair = [0, 170, 242, 43, 191, 255, 36, 36, 36, "mermaid hair"]
+    wolf_skin = [68, 68, 68, 124, 124, 124, 60, 60, 68, "wolf skin"]
     tries = [
         apple,
         life_potion,
@@ -48,7 +49,8 @@ def solve_epic_guard(message):
         epic_coin,
         chip,
         epic_fish,
-        mermaid_hair
+        mermaid_hair,
+        wolf_skin
     ]
     answer = globals_.epic_guard_answer
     img_data = requests.get(message.attachments[0]).content
