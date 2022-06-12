@@ -10,13 +10,12 @@ from datetime import datetime
 import variables
 from modules import training_solver, typer, epic_guard_solver, run_checker, inventory
 import globals_
+import aiohttp
+import io
 
 nest_asyncio.apply()
 
 client = discord.Client()
-
-random_work = ["drill"]
-
 
 async def heal():
     if globals_.doheal:
@@ -67,7 +66,7 @@ async def game_runner():
             await typer.type_command("cd")
 
             if time_now > globals_.next_work_timestamp:
-                await typer.type_command(random.choice(random_work))
+                await typer.type_command(random.choice(globals_.random_work))
                 globals_.next_work_timestamp = time.time() + 300
 
             if time_now > globals_.next_lootbox_timestamp:
@@ -75,28 +74,31 @@ async def game_runner():
                 await typer.type_command("buy edgy lootbox")
                 globals_.next_lootbox_timestamp = time.time() + 10800
 
-            if time_now > globals_.next_epic_quest_timestamp:
-                await typer.type_command("heal")
-                await typer.type_command("epic quest")
-                await typer.type_message("15")
-                await typer.press_enter()
-                globals_.next_epic_quest_timestamp = time.time() + 21600
+            if globals_.doepicquest:
+                if time_now > globals_.next_epic_quest_timestamp:
+                    await typer.type_command("heal")
+                    await typer.type_command("epic quest")
+                    await typer.type_message("15")
+                    await typer.press_enter()
+                    globals_.next_epic_quest_timestamp = time.time() + 21600
 
             if time_now > globals_.next_adventure_timestamp:
                 await heal()
                 await typer.type_command("adventure")
                 globals_.next_adventure_timestamp = time.time() + 3600
 
-            if time_now > globals_.next_farm_timestamp:
-                await typer.type_command("i")
-                await typer.type_command("farm " + farm_by_seed())
-                globals_.next_farm_timestamp = time.time() + 600
+            if globals_.dofarm:
+                if time_now > globals_.next_farm_timestamp:
+                    await typer.type_command("i")
+                    await typer.type_command("farm " + farm_by_seed())
+                    globals_.next_farm_timestamp = time.time() + 600
 
-            if time_now > globals_.next_training_timestamp:
-                globals_.is_solving_training = True
-                await typer.type_command("i")
-                await typer.type_command("tr")
-                globals_.next_training_timestamp = time.time() + 900
+            if globals_.dotr:
+                if time_now > globals_.next_training_timestamp:
+                    globals_.is_solving_training = True
+                    await typer.type_command("i")
+                    await typer.type_command("tr")
+                    globals_.next_training_timestamp = time.time() + 900
 
         await asyncio.sleep(60)
 
@@ -225,7 +227,8 @@ async def on_message(message):
         if "author" in embed.to_dict():
             if variables.username + "'s inventory" == embed.to_dict()["author"]["name"]:
                 embed_text = embed.to_dict()
-                for split_item in re.sub('<[^>]+>', '', embed_text["fields"][0]["value"].replace("**", "")).splitlines():
+                for split_item in re.sub('<[^>]+>', '',
+                                         embed_text["fields"][0]["value"].replace("**", "")).splitlines():
                     item = split_item.split(":", 1)[0].strip().replace(" ", "").lower()
                     count = split_item.split(":", 1)[1].strip().replace(",", "")
                     globals_.items[item] = count
@@ -241,15 +244,17 @@ async def on_message(message):
                 for ema in embed_text["fields"][0]["value"].splitlines():
                     if "(" in ema and "Lootbox" in ema:
                         hours_seconds = (int(ema.split("(**", 1)[1].split("h", 1)[0])) * 60 * 60
-                        seconds = (int(ema.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].split("h", 1)[1].replace(" ",
-                                                                                                                        "")) + 1) * 60
+                        seconds = (int(
+                            ema.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].split("h", 1)[1].replace(" ",
+                                                                                                             "")) + 1) * 60
                         total_seconds = hours_seconds + seconds
                         globals_.next_lootbox_timestamp = time.time() + total_seconds
 
                 for em in embed_text["fields"][1]["value"].splitlines():
                     if "(" in em and ("Training" in em or "Adventure" in em):
-                        seconds = (int(em.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
-                                                                                                                       "")) + 1) * 60
+                        seconds = (int(
+                            em.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
+                                                                                                            "")) + 1) * 60
                         if "Training" in em:
                             globals_.next_training_timestamp = time.time() + seconds
                         if "Adventure" in em:
@@ -257,8 +262,9 @@ async def on_message(message):
 
                 for ems in embed_text["fields"][2]["value"].splitlines():
                     if "(" in ems and ("Chop" in ems or "Farm" in ems):
-                        seconds = (int(ems.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
-                                                                                                                        "")) + 1) * 60
+                        seconds = (int(
+                            ems.split("(", 1)[1].split("**", 1)[1].split("m", 1)[0].replace(" ", "").replace("h",
+                                                                                                             "")) + 1) * 60
                         if "Chop" in ems:
                             globals_.next_work_timestamp = time.time() + seconds
                         if "Farm" in ems:
@@ -268,8 +274,23 @@ async def on_message(message):
         channel = client.get_channel(979667826694582303)
         now = datetime.now()
         current_time = now.strftime("%H:%M:%S")
-        await channel.send(variables.username + " triggered epic guard at " + current_time)
-        await typer.type_message(epic_guard_solver.solve_epic_guard(message))
+
+        answer = epic_guard_solver.solve_epic_guard(message)
+        embed_color = 0x00ff00
+        if globals_.epic_guard_answer in answer:
+            embed_color = 0xff0000
+
+        embedVar = discord.Embed(title=variables.username + " triggered epic guard at " + current_time,
+                                 description="", color=embed_color)
+        embedVar.add_field(
+            name="With answer:",
+            value=answer,
+            inline=False)
+        embedVar.set_image(url=message.attachments[0])
+
+        await channel.send(embed=embedVar)
+
+        await typer.type_message(answer)
         await typer.press_enter()
 
     if is_jail_message(message_content.lower()):

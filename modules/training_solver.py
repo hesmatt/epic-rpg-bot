@@ -58,7 +58,6 @@ def letter_of_position(word, position):
 
 
 async def solve_training(training_task_text):
-    print(training_task_text)
     task_type = get_training_task(training_task_text)
     task_text_lines = training_task_text.splitlines()
     answer = "No idea"
