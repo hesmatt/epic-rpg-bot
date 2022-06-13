@@ -8,14 +8,13 @@ import emoji
 import nest_asyncio
 from datetime import datetime
 import variables
-from modules import training_solver, typer, epic_guard_solver, run_checker, inventory
+from modules import training_solver, typer, epic_guard_solver, inventory
 import globals_
-import aiohttp
-import io
 
 nest_asyncio.apply()
 
 client = discord.Client()
+
 
 async def heal():
     if globals_.doheal:
@@ -74,31 +73,28 @@ async def game_runner():
                 await typer.type_command("buy edgy lootbox")
                 globals_.next_lootbox_timestamp = time.time() + 10800
 
-            if globals_.doepicquest:
-                if time_now > globals_.next_epic_quest_timestamp:
-                    await typer.type_command("heal")
-                    await typer.type_command("epic quest")
-                    await typer.type_message("15")
-                    await typer.press_enter()
-                    globals_.next_epic_quest_timestamp = time.time() + 21600
+            if time_now > globals_.next_epic_quest_timestamp and globals_.doepicquest:
+                await typer.type_command("heal")
+                await typer.type_command("epic quest")
+                await typer.type_message("15")
+                await typer.press_enter()
+                globals_.next_epic_quest_timestamp = time.time() + 21600
 
             if time_now > globals_.next_adventure_timestamp:
                 await heal()
                 await typer.type_command("adventure")
                 globals_.next_adventure_timestamp = time.time() + 3600
 
-            if globals_.dofarm:
-                if time_now > globals_.next_farm_timestamp:
-                    await typer.type_command("i")
-                    await typer.type_command("farm " + farm_by_seed())
-                    globals_.next_farm_timestamp = time.time() + 600
+            if time_now > globals_.next_farm_timestamp and globals_.dofarm:
+                await typer.type_command("i")
+                await typer.type_command("farm " + farm_by_seed())
+                globals_.next_farm_timestamp = time.time() + 600
 
-            if globals_.dotr:
-                if time_now > globals_.next_training_timestamp:
-                    globals_.is_solving_training = True
-                    await typer.type_command("i")
-                    await typer.type_command("tr")
-                    globals_.next_training_timestamp = time.time() + 900
+            if time_now > globals_.next_training_timestamp and globals_.dotr:
+                globals_.is_solving_training = True
+                await typer.type_command("i")
+                await typer.type_command("tr")
+                globals_.next_training_timestamp = time.time() + 900
 
         await asyncio.sleep(60)
 
@@ -116,19 +112,19 @@ async def on_message(message):
     if "tdlf" in message_content:
         if message_content == "tdlf start" and message.author.id == variables.user_id:
             globals_.run = True
-            embedVar = discord.Embed(title="Start bota proběhne do minuty",
+            embed = discord.Embed(title="Start bota proběhne do minuty",
                                      description="Pro ukončení napiš ```tdlf end```", color=0x00ff00)
-            await message.channel.send(embed=embedVar)
+            await message.channel.send(embed=embed)
 
         if message_content == "tdlf cons" and message.author.id == variables.user_id:
             await typer.type_command("i")
-            embedVar = discord.Embed(title="Consumables", description=globals_.consumables, color=0x00ff00)
-            await message.channel.send(embed=embedVar)
+            embed = discord.Embed(title="Consumables", description=globals_.consumables, color=0x00ff00)
+            await message.channel.send(embed=embed)
 
         if message_content == "tdlf i" and message.author.id == variables.user_id:
             await typer.type_command("i")
-            embedVar = discord.Embed(title="Items", description=globals_.items, color=0x00ff00)
-            await message.channel.send(embed=embedVar)
+            embed = discord.Embed(title="Items", description=globals_.items, color=0x00ff00)
+            await message.channel.send(embed=embed)
 
         if message_content == "tdlf open lb" and message.author.id == variables.user_id:
             await typer.type_command("open edgy lootbox all")
@@ -140,9 +136,9 @@ async def on_message(message):
 
         if message_content == "tdlf end" and message.author.id == variables.user_id:
             globals_.run = False
-            embedVar = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů",
+            embed = discord.Embed(title="Bot končí", description="Možná ještě projede posledních pár commandů",
                                      color=0x00ff00)
-            await message.channel.send(embed=embedVar)
+            await message.channel.send(embed=embed)
 
         if message_content == "tdlf tr" and message.author.id == variables.user_id:
             await typer.type_command("i")
@@ -157,37 +153,37 @@ async def on_message(message):
             await typer.type_command("adventure")
 
         if "help" in message_content:
-            embedVar = discord.Embed(title="Možné tdlf helper commandy", description="", color=0x00ff00)
-            embedVar.add_field(
+            embed = discord.Embed(title="Možné tdlf helper commandy", description="", color=0x00ff00)
+            embed.add_field(
                 name="```tdlf start```",
                 value="Pustí tu kurvu bota", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf end```",
                 value="Vypne tu kurvu bota", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf tr```",
                 value="Pustí automatický training", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf farm```",
                 value="Zandá rpg farm podle seedu co máš v inventáři", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf ad```",
                 value="Pustí adventure s healem", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf open lb```",
                 value="Otevře všechny lootboxy", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf cons```",
                 value="Json consumables", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf i```",
                 value="Json items", inline=False)
-            embedVar.add_field(
+            embed.add_field(
                 name="```tdlf craft ultra log use apple ruby banana epicfish goldenfish```\n"
                      "```tdlf craft ultra log```",
                 value="Automaticky spustí commandy pro craft ULTRA logu, use je optional a definují se tam itemy, které se můžou vytradit nebo dismantlnout. Pokud se use nepoužije, je to jako by byly vypsané všechny itemy, takže se vytradí a dismantlí.",
                 inline=False)
-            await message.channel.send(embed=embedVar)
+            await message.channel.send(embed=embed)
         if "craft" in message_content and message.author.id == variables.user_id:
             craft_item = message_content.split("craft ", 1)[1].split(" use")[0]
             use = message_content.split("craft ", 1)[1].split("use ")[1]
@@ -280,15 +276,15 @@ async def on_message(message):
         if globals_.epic_guard_answer in answer:
             embed_color = 0xff0000
 
-        embedVar = discord.Embed(title=variables.username + " triggered epic guard at " + current_time,
+        embed = discord.Embed(title=variables.username + " triggered epic guard at " + current_time,
                                  description="", color=embed_color)
-        embedVar.add_field(
+        embed.add_field(
             name="With answer:",
             value=answer,
             inline=False)
-        embedVar.set_image(url=message.attachments[0])
+        embed.set_image(url=message.attachments[0])
 
-        await channel.send(embed=embedVar)
+        await channel.send(embed=embed)
 
         await typer.type_message(answer)
         await typer.press_enter()
@@ -296,8 +292,8 @@ async def on_message(message):
     if is_jail_message(message_content.lower()):
         globals_.run = False
         globals_.is_banned = True
-        embedVar = discord.Embed(title="EPIC GUARD", description="Vypínám se kvůli epic guardu a jailu", color=0x00ff00)
-        await message.channel.send(embed=embedVar)
+        embed = discord.Embed(title="EPIC GUARD", description="Vypínám se kvůli epic guardu a jailu", color=0x00ff00)
+        await message.channel.send(embed=embed)
 
     if is_training_task(message_content.lower()):
         globals_.is_solving_training = True

@@ -32,4 +32,4 @@ doheal = True  # set to True to use healing during automatic run
 dotr = False  # set to True to run rpg training
 dofarm = False  # set to True to run rpg farm
 doepicquest = False  # set to True to run rpg epic quest lvl 15
-random_work = ["fish"]
+random_work = ["fish", "chop"]
